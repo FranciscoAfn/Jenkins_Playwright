@@ -24,13 +24,14 @@ pipeline {
         stage('Run Playwright tests') {
             steps {
                 sh '''
-                    echo "Running Playwright tests..."
-                    npx playwright test --reporter=html
+                    echo "Running Playwright tests with forced HTML reporter..."
+                    npx playwright test --reporter=html --output=test-results
         
-                    echo "Forcing report generation:"
-                    npx playwright show-report playwright-report || true
+                    echo "Copying full report to playwright-report..."
+                    rm -rf playwright-report
+                    cp -r test-results/playwright-report playwright-report || true
         
-                    echo "Listing report folder:"
+                    echo "Listing playwright-report folder:"
                     ls -R playwright-report || true
                 '''
             }
