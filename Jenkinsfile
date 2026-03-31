@@ -8,18 +8,6 @@ pipeline {
             }
         }
 
-        stage('Install dependencies') {
-            steps {
-                sh 'npm ci'
-            }
-        }
-
-        stage('Install Playwright browsers') {
-            steps {
-                sh 'npx playwright install'
-            }
-        }
-
         stage('Run Playwright tests') {
             steps {
                 sh '''
