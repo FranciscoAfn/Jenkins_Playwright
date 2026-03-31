@@ -20,11 +20,22 @@ pipeline {
             }
         }
 
+
         stage('Run Playwright tests') {
             steps {
-                sh 'npx playwright test --reporter=html'
+                sh '''
+                    echo "Running Playwright tests..."
+                    npx playwright test --reporter=html
+        
+                    echo "Forcing report generation:"
+                    npx playwright show-report playwright-report || true
+        
+                    echo "Listing report folder:"
+                    ls -R playwright-report || true
+                '''
             }
         }
+
     }
 
     post {
