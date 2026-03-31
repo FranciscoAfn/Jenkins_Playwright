@@ -20,23 +20,17 @@ pipeline {
             }
         }
 
-
         stage('Run Playwright tests') {
             steps {
                 sh '''
-                    echo "Running Playwright tests with forced HTML reporter..."
-                    npx playwright test --reporter=html --output=test-results
-        
-                    echo "Copying full report to playwright-report..."
-                    rm -rf playwright-report
-                    cp -r test-results/playwright-report playwright-report || true
-        
-                    echo "Listing playwright-report folder:"
+                    echo "Running Playwright tests..."
+                    npx playwright test --reporter=html
+
+                    echo "Listing report folder:"
                     ls -R playwright-report || true
                 '''
             }
         }
-
     }
 
     post {
