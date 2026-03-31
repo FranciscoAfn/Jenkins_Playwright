@@ -31,7 +31,7 @@ pipeline {
         always {
             publishHTML(target: [
                 reportDir: 'playwright-report',
-                reportFiles: 'report.html',
+                reportFiles: 'index.html',
                 reportName: 'Playwright Test Report',
                 keepAll: true,
                 alwaysLinkToLastBuild: true
