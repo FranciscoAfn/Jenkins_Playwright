@@ -1,8 +1,9 @@
 import { defineConfig } from '@playwright/test';
+import rpConfig from './reportportal.config.cjs';
 
 export default defineConfig({
   testDir: './tests',
   reporter: [
-    ['html', { outputFolder: 'playwright-report', open: 'never' }]
-  ],
+    ['@reportportal/agent-js-playwright', rpConfig]
+  ]
 });
