@@ -11,25 +11,10 @@ pipeline {
         stage('Run Playwright tests') {
             steps {
                 sh '''
-                    echo "Running Playwright tests..."
-                    npx playwright test --reporter=html
-
-                    echo "Listing report folder:"
-                    ls -R playwright-report || true
+                    echo "Running Playwright tests with ReportPortal reporter..."
+                    npx playwright test
                 '''
             }
-        }
-    }
-
-    post {
-        always {
-            publishHTML(target: [
-                reportDir: 'playwright-report',
-                reportFiles: 'index.html',
-                reportName: 'Playwright Test Report',
-                keepAll: true,
-                alwaysLinkToLastBuild: true
-            ])
         }
     }
 }
