@@ -1,4 +1,4 @@
-import { defineConfig } from '@playwright/tests';
+import { defineConfig } from '@playwright/test';
 import rpConfig from './reportportal.config.cjs';
 
 export default defineConfig({
