@@ -12,7 +12,7 @@ pipeline {
             steps {
                 sh '''
                     echo "Running Playwright tests with ReportPortal reporter..."
-                    npx playwright tests
+                    npx playwright test
                 '''
             }
         }
