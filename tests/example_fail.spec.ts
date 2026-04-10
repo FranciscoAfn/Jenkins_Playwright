@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-test('example test @example_fail', async ({ page }) => {
-  await page.goto('https://google.com');
-  await expect(page).toHaveTitle(/Apple/);
+test('intentional failure (uploads png + webm)', async ({ page }) => {
+  await page.goto('https://example.com');
+
+  // Intentional fail
+  await expect(page.locator('h1')).toHaveText('WRONG TEXT');
 });
