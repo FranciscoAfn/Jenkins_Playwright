@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('intentional failure (uploads png + webm)', async ({ page }) => {
+test('intentional failure (uploads png + webm) @example_fail', async ({ page }) => {
   await page.goto('https://example.com');
 
   // Intentional fail
