@@ -1,5 +1,6 @@
 // fixtures/base-test.ts
 import { test as base, expect } from '@playwright/test';
+import { ReportingApi } from '@reportportal/agent-js-playwright'; // <-- IMPORT RP API
 import { execSync } from 'child_process';
 import fs from 'fs';
 
@@ -7,10 +8,8 @@ export const test = base.extend<{ handleFailuresGlobally: void }>({
   
   handleFailuresGlobally: [async ({ page }, use, testInfo) => {
     
-    // 1. Run the actual test
     await use();
 
-    // 2. If the test passed, do nothing
     if (testInfo.status === testInfo.expectedStatus) return;
 
     console.log(`Test failed: ${testInfo.title}. Processing attachments...`);
@@ -20,35 +19,36 @@ export const test = base.extend<{ handleFailuresGlobally: void }>({
     // ==========================================
     try {
       const screenshotPath = testInfo.outputPath('failure-screenshot.png');
-      // We must take the screenshot before closing the page context
       await page.screenshot({ path: screenshotPath, timeout: 5000 });
       
+      // 1. Attach to standard Playwright report
       await testInfo.attach('failure-screenshot', {
         path: screenshotPath,
         contentType: 'image/png',
       });
+
+      // 2. FORCE ATTACH DIRECTLY TO REPORT PORTAL
+      ReportingApi.info('Test Failure Screenshot', {
+        name: 'failure-screenshot.png',
+        type: 'image/png',
+        content: fs.readFileSync(screenshotPath),
+      });
+
       console.log('✅ Screenshot attached successfully.');
     } catch (e) {
       console.log('❌ Could not take screenshot:', e.message);
     }
 
     const video = page.video();
-    if (!video) {
-      console.log('No video object found on page.');
-      return;
-    }
+    if (!video) return;
 
     // ==========================================
     // STEP 2: FLUSH THE WEBM VIDEO
     // ==========================================
-    // Closing the context forces Playwright to finish writing the WebM file
     await page.context().close();
     const tempWebmPath = await video.path();
     
-    if (!fs.existsSync(tempWebmPath)) {
-      console.log('❌ Temporary WebM file not found on disk.');
-      return;
-    }
+    if (!fs.existsSync(tempWebmPath)) return;
 
     // ==========================================
     // STEP 3: CONVERT WEBM TO MP4
@@ -62,7 +62,7 @@ export const test = base.extend<{ handleFailuresGlobally: void }>({
       );
     } catch (err) {
       console.error('❌ FFmpeg conversion failed:', err.message);
-      return; // Exit if we have no MP4 to attach
+      return; 
     }
 
     // ==========================================
@@ -70,18 +70,25 @@ export const test = base.extend<{ handleFailuresGlobally: void }>({
     // ==========================================
     if (fs.existsSync(mp4Path)) {
       console.log('Attaching MP4 Buffer to results...');
-      
-      // Reading into a buffer ensures the ReportPortal agent catches it immediately
       const videoBuffer = fs.readFileSync(mp4Path);
       
+      // 1. Attach to standard Playwright report
       await testInfo.attach('video-mp4', {
         body: videoBuffer,
         contentType: 'video/mp4',
       });
+
+      // 2. FORCE ATTACH DIRECTLY TO REPORT PORTAL
+      ReportingApi.info('Test Failure Video Recording', {
+        name: 'video.mp4',
+        type: 'video/mp4',
+        content: videoBuffer,
+      });
+
       console.log('✅ MP4 successfully attached!');
     }
     
-  }, { auto: true }], // { auto: true } ensures this runs for every test
+  }, { auto: true }],
 });
 
 export { expect };
