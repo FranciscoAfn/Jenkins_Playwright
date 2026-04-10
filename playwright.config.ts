@@ -3,7 +3,10 @@ import rpConfig from './reportportal.config.cjs';
 
 export default defineConfig({
   testDir: './tests',
-    projects: [
+  
+  outputDir: 'test-results',
+  
+   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
@@ -26,4 +29,6 @@ export default defineConfig({
     video: 'retain-on-failure',      // WEBM
     trace: 'retain-on-failure',
   },
+
+  preserveOutput: 'failures-only',
 });
