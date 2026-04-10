@@ -3,7 +3,7 @@ pipeline {
 
   parameters {
     string(name: 'TEST_PATH', defaultValue: 'tests', description: 'Folder or test file to run')
-    string(name: 'TEST_TAG', defaultValue: '', description: 'Optional tag (e.g. @smoke)')
+    string(name: 'TEST_TAG', defaultValue: '', description: 'Optional tag (e.g. @example)')
     choice(name: 'BROWSER', choices: ['chromium', 'firefox', 'webkit'], description: 'Browser')
   }
 
