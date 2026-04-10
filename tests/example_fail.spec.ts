@@ -2,44 +2,39 @@ import { test, expect } from '@playwright/test';
 import { execSync } from 'child_process';
 import fs from 'fs';
 
-test.afterEach(async ({}, testInfo) => {
+test.afterEach(async ({ page }, testInfo) => {
   if (testInfo.status === testInfo.expectedStatus) return;
+
+  // 1. FORCE THE CONTEXT TO CLOSE.
+  // This guarantees Playwright finishes flushing the .webm video to disk completely.
+  // Without this, FFmpeg tries to convert an incomplete file, resulting in a corrupted MP4.
+  await page.context().close();
 
   const webmPath = testInfo.video?.path();
 
-  if (!webmPath) {
-    console.log('No video attached.');
-    return;
-  }
-
-  // wait until file exists and is not changing anymore
-  await new Promise((r) => setTimeout(r, 1000));
-
-  if (!fs.existsSync(webmPath)) {
-    console.log('Webm file missing:', webmPath);
+  if (!webmPath || !fs.existsSync(webmPath)) {
+    console.log('Webm file missing or no video attached:', webmPath);
     return;
   }
 
   const mp4Path = webmPath.replace(/\.webm$/, '.mp4');
-
   console.log(`Converting: ${webmPath} -> ${mp4Path}`);
 
   try {
     execSync(
       `ffmpeg -y -i "${webmPath}" -c:v libx264 -pix_fmt yuv420p "${mp4Path}"`,
-      {
-        stdio: 'inherit',
-      }
+      { stdio: 'inherit' }
     );
-
     console.log('MP4 created successfully:', mp4Path);
   } catch (err) {
     console.error('FFmpeg conversion failed:', err);
+    return; // Exit early so we don't attach a broken file
   }
 
   if (fs.existsSync(mp4Path)) {
-    testInfo.attachments.push({
-      name: 'video-mp4',
+    // 2. USE THE ASYNC ATTACH METHOD.
+    // This properly signals to reporters (like ReportPortal) that a new file is ready.
+    await testInfo.attach('video-mp4', {
       path: mp4Path,
       contentType: 'video/mp4',
     });
