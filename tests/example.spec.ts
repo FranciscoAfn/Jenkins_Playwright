@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/base-test';
 
 test('example test @example', async ({ page }) => {
   await page.goto('https://google.com');
