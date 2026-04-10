@@ -29,7 +29,7 @@ test.afterEach(async ({}, testInfo) => {
   });
 });
 
-test('intentional failure (uploads png + mp4)', async ({ page }) => {
+test('intentional failure (uploads png + mp4) @example_fail', async ({ page }) => {
   await page.goto('https://example.com');
 
   // Intentional fail
