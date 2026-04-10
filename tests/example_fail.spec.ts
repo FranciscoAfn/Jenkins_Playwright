@@ -5,16 +5,25 @@ import fs from 'fs';
 test.afterEach(async ({ page }, testInfo) => {
   if (testInfo.status === testInfo.expectedStatus) return;
 
-  // 1. Force the context to close to flush the WebM file completely.
-  await page.context().close();
-
-  const webmPath = testInfo.video?.path();
-
-  if (!webmPath || !fs.existsSync(webmPath)) {
-    console.log('Webm file missing or no video attached:', webmPath);
+  // 1. Get the video object from the PAGE, not testInfo
+  const video = page.video();
+  if (!video) {
+    console.log('No video object attached to the page.');
     return;
   }
 
+  // 2. Force the context to close to fully flush the WebM file to disk.
+  await page.context().close();
+
+  // 3. AWAIT the video path (Playwright requires await here)
+  const webmPath = await video.path();
+
+  if (!webmPath || !fs.existsSync(webmPath)) {
+    console.log('Webm file missing on disk:', webmPath);
+    return;
+  }
+
+  // Create the mp4 path in the exact same directory
   const mp4Path = webmPath.replace(/\.webm$/, '.mp4');
   console.log(`Converting: ${webmPath} -> ${mp4Path}`);
 
@@ -26,9 +35,10 @@ test.afterEach(async ({ page }, testInfo) => {
     console.log('MP4 created successfully:', mp4Path);
   } catch (err) {
     console.error('FFmpeg conversion failed:', err);
-    return; // Exit early so we don't attach a broken file
+    return; // Exit early if ffmpeg fails
   }
 
+  // 4. Attach the MP4 using the Buffer fallback directly to ReportPortal
   if (fs.existsSync(mp4Path)) {
     console.log('Reading MP4 into buffer and attaching...');
     const videoBuffer = fs.readFileSync(mp4Path);
