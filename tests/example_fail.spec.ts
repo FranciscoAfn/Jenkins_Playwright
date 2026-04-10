@@ -5,9 +5,7 @@ import fs from 'fs';
 test.afterEach(async ({ page }, testInfo) => {
   if (testInfo.status === testInfo.expectedStatus) return;
 
-  // 1. FORCE THE CONTEXT TO CLOSE.
-  // This guarantees Playwright finishes flushing the .webm video to disk completely.
-  // Without this, FFmpeg tries to convert an incomplete file, resulting in a corrupted MP4.
+  // 1. Force the context to close to flush the WebM file completely.
   await page.context().close();
 
   const webmPath = testInfo.video?.path();
@@ -32,10 +30,11 @@ test.afterEach(async ({ page }, testInfo) => {
   }
 
   if (fs.existsSync(mp4Path)) {
-    // 2. USE THE ASYNC ATTACH METHOD.
-    // This properly signals to reporters (like ReportPortal) that a new file is ready.
+    console.log('Reading MP4 into buffer and attaching...');
+    const videoBuffer = fs.readFileSync(mp4Path);
+    
     await testInfo.attach('video-mp4', {
-      path: mp4Path,
+      body: videoBuffer,
       contentType: 'video/mp4',
     });
   }
