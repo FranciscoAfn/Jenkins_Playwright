@@ -19,7 +19,7 @@ export default defineConfig({
   ],
   reporter: [
     ['@reportportal/agent-js-playwright', rpConfig]
-  ]
+  ],
     
   use: {
     screenshot: 'only-on-failure',   // PNG
