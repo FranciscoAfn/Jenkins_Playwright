@@ -5,46 +5,47 @@ import fs from 'fs';
 test.afterEach(async ({ page }, testInfo) => {
   if (testInfo.status === testInfo.expectedStatus) return;
 
-  // 1. Get the video object from the PAGE, not testInfo
   const video = page.video();
   if (!video) {
-    console.log('No video object attached to the page.');
+    console.log('No video attached to the page.');
     return;
   }
 
-  // 2. Force the context to close to fully flush the WebM file to disk.
+  // 1. Force context to close so the temporary WebM file is fully written
   await page.context().close();
 
-  // 3. AWAIT the video path (Playwright requires await here)
-  const webmPath = await video.path();
+  // 2. Get the TEMPORARY system path of the WebM file
+  const tempWebmPath = await video.path();
 
-  if (!webmPath || !fs.existsSync(webmPath)) {
-    console.log('Webm file missing on disk:', webmPath);
+  if (!fs.existsSync(tempWebmPath)) {
+    console.log('Temp Webm file not found:', tempWebmPath);
     return;
   }
 
-  // Create the mp4 path in the exact same directory
-  const mp4Path = webmPath.replace(/\.webm$/, '.mp4');
-  console.log(`Converting: ${webmPath} -> ${mp4Path}`);
+  // 3. THE FIX: Generate the MP4 path directly inside the final test-results directory
+  const mp4Path = testInfo.outputPath('video.mp4');
+
+  console.log(`Converting temporary webm to final mp4...`);
+  console.log(`Temp Webm: ${tempWebmPath}`);
+  console.log(`Final MP4: ${mp4Path}`);
 
   try {
     execSync(
-      `ffmpeg -y -i "${webmPath}" -c:v libx264 -pix_fmt yuv420p "${mp4Path}"`,
+      `ffmpeg -y -i "${tempWebmPath}" -c:v libx264 -pix_fmt yuv420p "${mp4Path}"`,
       { stdio: 'inherit' }
     );
-    console.log('MP4 created successfully:', mp4Path);
+    console.log('MP4 created successfully in test-results folder!');
   } catch (err) {
-    console.error('FFmpeg conversion failed:', err);
-    return; // Exit early if ffmpeg fails
+    // If you see this error, FFmpeg might not be installed on your machine/CI pipeline
+    console.error('FFmpeg conversion failed:', err.message);
+    return;
   }
 
-  // 4. Attach the MP4 using the Buffer fallback directly to ReportPortal
+  // 4. Attach the MP4. 
+  // Because it is already in the correct output path, Playwright will register it perfectly.
   if (fs.existsSync(mp4Path)) {
-    console.log('Reading MP4 into buffer and attaching...');
-    const videoBuffer = fs.readFileSync(mp4Path);
-    
     await testInfo.attach('video-mp4', {
-      body: videoBuffer,
+      path: mp4Path,
       contentType: 'video/mp4',
     });
   }
