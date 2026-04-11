@@ -14,9 +14,7 @@ export const test = base.extend<{ handleFailuresGlobally: void }>({
 
     console.log(`Test failed: ${testInfo.title}. Processing attachments...`);
 
-    // ==========================================
     // STEP 1: TAKE THE SCREENSHOT FIRST
-    // ==========================================
     try {
       const screenshotPath = testInfo.outputPath('failure-screenshot.png');
       await page.screenshot({ path: screenshotPath, timeout: 5000 });
@@ -34,25 +32,21 @@ export const test = base.extend<{ handleFailuresGlobally: void }>({
         content: fs.readFileSync(screenshotPath),
       });
 
-      console.log('✅ Screenshot attached successfully.');
+      console.log(' Screenshot attached successfully.');
     } catch (e) {
-      console.log('❌ Could not take screenshot:', e.message);
+      console.log(' Could not take screenshot:', e.message);
     }
 
     const video = page.video();
     if (!video) return;
 
-    // ==========================================
     // STEP 2: FLUSH THE WEBM VIDEO
-    // ==========================================
     await page.context().close();
     const tempWebmPath = await video.path();
     
     if (!fs.existsSync(tempWebmPath)) return;
 
-    // ==========================================
     // STEP 3: CONVERT WEBM TO MP4
-    // ==========================================
     const mp4Path = testInfo.outputPath('video.mp4');
     try {
       console.log('Converting WebM to MP4...');
@@ -65,9 +59,7 @@ export const test = base.extend<{ handleFailuresGlobally: void }>({
       return; 
     }
 
-    // ==========================================
     // STEP 4: ATTACH MP4 TO REPORTPORTAL
-    // ==========================================
     if (fs.existsSync(mp4Path)) {
       console.log('Attaching MP4 Buffer to results...');
       const videoBuffer = fs.readFileSync(mp4Path);
@@ -85,7 +77,7 @@ export const test = base.extend<{ handleFailuresGlobally: void }>({
         content: videoBuffer,
       });
 
-      console.log('✅ MP4 successfully attached!');
+      console.log(' MP4 successfully attached!');
     }
     
   }, { auto: true }],
